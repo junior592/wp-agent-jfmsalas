@@ -1,0 +1,46 @@
+name: WordPress safe slug change
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Keep true to avoid changing WordPress"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      confirm_change_slug:
+        description: "Must be true together with dry_run=false to modify WordPress"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  wp_slug_change:
+    runs-on: ubuntu-latest
+
+    env:
+      WP_URL: ${{ secrets.WP_URL }}
+      WP_USER: ${{ secrets.WP_USER }}
+      WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      CONFIRM_CHANGE_SLUG: ${{ inputs.confirm_change_slug }}
+      FROM_SLUG: mi-obra
+      TO_SLUG: obra
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run WordPress safe slug agent
+        run: node scripts/wp-change-mi-obra-to-obra.js
