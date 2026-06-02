@@ -78,12 +78,34 @@ async function findPageBySlug(slug) {
   return wpFetch(`/wp-json/wp/v2/pages?slug=${encodeURIComponent(slug)}&per_page=10`);
 }
 
+function summarizeCapabilities(caps) {
+  if (!caps || typeof caps !== "object") return {};
+  return {
+    edit_pages: Boolean(caps.edit_pages),
+    edit_others_pages: Boolean(caps.edit_others_pages),
+    edit_published_pages: Boolean(caps.edit_published_pages),
+    publish_pages: Boolean(caps.publish_pages),
+    manage_options: Boolean(caps.manage_options),
+  };
+}
+
 async function main() {
   console.log("WordPress safe slug agent");
   console.log(`Site: ${WP_URL}`);
   console.log(`Goal: /${FROM_SLUG}/ -> /${TO_SLUG}/`);
   console.log(`DRY_RUN=${DRY_RUN}`);
   console.log(`CONFIRM_CHANGE_SLUG=${CONFIRM_CHANGE_SLUG}`);
+
+  const me = await wpFetch(`/wp-json/wp/v2/users/me?context=edit`);
+  console.log("Authenticated WordPress user:");
+  console.log(JSON.stringify({
+    id: me.id,
+    username: me.username,
+    name: me.name,
+    slug: me.slug,
+    roles: me.roles,
+    capabilities: summarizeCapabilities(me.capabilities),
+  }, null, 2));
 
   const pages = await findPageBySlug(FROM_SLUG);
 
